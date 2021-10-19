@@ -26,7 +26,7 @@ genderdf = genderdf[ (genderdf['basesalary']<150000)]
 ax = px.box(genderdf, x="title", y="basesalary", color="gender", labels = dict(title="Job Title", basesalary='Base Salary', gender='Gender'))
 st.plotly_chart(ax)
 st.subheader('🔎 Observation')
-st.write('There is no prominent wage gap between Males and Females in the dataset provided. As this dataset represents salary data from the year 2017 to 2021 which is very recent, it could mean that the wage gap that existed earlier has gotten better over time However, \'other\' gender category salary in STEM jobs is alarmingly low for Data Scientist and Software Engineering Manager roles. The dataset does not mention if \'Other\' refers to non-binary gender roles or the values where gender remains unspecified. Since the total count of \'Other\' is considerably lower compared to Male & Female, we cannot make an inference.  But, a more important thing to note is that, although the wage gap between genders doesn\'t seem to exist, the overall representation of \'women\' and \'other\' in stem jobs is still lower compared to men as can be seen in the below count plot.')
+st.write('There is no prominent wage gap between Males and Females in the dataset provided. As this dataset represents salary data from the year 2017 to 2021 which is very recent, it could mean that the wage gap that existed earlier has gotten better over time. However, \'other\' gender category salary in STEM jobs is alarmingly low for Data Scientist and Software Engineering Manager roles. The dataset does not mention if \'Other\' refers to non-binary gender roles or the values where gender remains unspecified. Since the total count of \'Other\' is considerably lower compared to Male & Female, we cannot make an inference.  But, a more important thing to note is that, although the wage gap between genders doesn\'t seem to exist, the overall representation of \'women\' and \'other\' in stem jobs is still lower compared to men as can be seen in the below count plot.')
 
 
 gender_proportion_chart = px.histogram(genderdf, x='title', color="gender", barmode='group', labels = dict(title="Job Title", gender='Gender'))
@@ -69,7 +69,9 @@ fig = go.Figure(layout=layout, data=[
 fig.update_layout(barmode='group')
 st.plotly_chart(fig)
 st.subheader('🔎 Observation')
-st.write('Across different job roles, salaries offered in states like California, Washington, Massachusetts, and New York is on a higher end. Whereas, states like DC, Georgia, Texas, and Pennsylvania salaries are comparatively on a lower end. This directly correlates to the cost of living and expenses for these states. Dataset here does not indicate any noteworthy difference in the trends across states based on job roles in comparison with Data Science Roles. ')
+st.write('Across different job roles, salaries offered in states like California, Washington, Massachusetts, and New York is on the higher end. Whereas, states like DC, Georgia, Texas, and Pennsylvania salaries are comparatively on the lower end. This directly correlates to the cost of living and expenses for these states. Dataset here does not indicate any noteworthy difference in the trends across states based on job roles in comparison with Data Science Roles. ')
+
+
 
 st.header('📊 Dataset Reference')
 
