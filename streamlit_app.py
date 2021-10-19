@@ -1,120 +1,79 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import altair as alt
-import pydeck as pdk
+import plotly.express as px
+import plotly.graph_objects as go
 
-# SETTING PAGE CONFIG TO WIDE MODE
-st.set_page_config(layout="wide")
+st.title('Analyzing salaries of STEM jobs')
 
-# LOADING DATA
-DATE_TIME = "date/time"
-DATA_URL = (
-    "http://s3-us-west-2.amazonaws.com/streamlit-demo-data/uber-raw-data-sep14.csv.gz"
+@st.cache
+def load_data():
+    df = pd.read_csv("Levels_Fyi_Salary_Data.csv")
+    return df
+
+df1 = load_data()
+df = df1.copy()
+
+st.header(' Is there a prominent *wage gap* between genders in *STEM* Jobs?')
+st.subheader('Does this trend vary for different job titles?')
+titles_chosen = st.multiselect(
+   "Choose the job titles that you want to compare",
+    ('Software Engineer', 'Data Scientist', 'Hardware Engineer','Product Manager','Software Engineering Manager','Business Analyst','Technical Program Manager','Solution Architect'),
+    default=['Software Engineer','Data Scientist'])
+
+genderdf = df[ (df['gender']=='Female') | (df['gender']=='Male') | (df['gender']=='Other')]
+genderdf = genderdf[ (genderdf['title'].isin(titles_chosen))]
+genderdf = genderdf[ (genderdf['basesalary']<150000)]
+ax = px.box(genderdf, x="title", y="basesalary", color="gender", labels = dict(title="Job Title", basesalary='Base Salary', gender='Gender'))
+st.plotly_chart(ax)
+st.subheader('🔎 Observation')
+st.write('There is no prominent wage gap between Males and Females in the dataset provided. As this dataset represents salary data from the year 2017 to 2021 which is very recent, it could mean that the wage gap that existed earlier has gotten better over time However, \'other\' gender category salary in STEM jobs is alarmingly low for Data Scientist and Software Engineering Manager roles. The dataset does not mention if \'Other\' refers to non-binary gender roles or the values where gender remains unspecified. Since the total count of \'Other\' is considerably lower compared to Male & Female, we cannot make an inference.  But, a more important thing to note is that, although the wage gap between genders doesn\'t seem to exist, the overall representation of \'women\' and \'other\' in stem jobs is still lower compared to men as can be seen in the below count plot.')
+
+
+gender_proportion_chart = px.histogram(genderdf, x='title', color="gender", barmode='group', labels = dict(title="Job Title", gender='Gender'))
+st.plotly_chart(gender_proportion_chart)
+
+### END OF VISUALIZATION #1 ###
+
+st.header('How does the salary of STEM jobs vary in top 10 states of US?')# (CA, WA, NY, TX, MA, PA, GA, DC, NJ)')
+st.subheader('Does this trend vary differently for a Data Scientist job in comparison to other jobs?')
+df["US State"] = df["location"].apply(lambda x: x.split()[-1])
+#top 10 - CA, WA, NY, TX, MA, PA, GA, DC, NJ, because sample set of other countries were very limited & data didn't mention currency details
+location_trend_df = df[df["US State"].isin(["CA", "WA", "NY", "TX", "MA", "PA", "GA", "DC", "NJ"])]
+
+role_to_compare = st.selectbox(
+   "Choose a role to compare with Data Scientist",
+    ('Software Engineer', 'Hardware Engineer','Product Manager','Software Engineering Manager','Business Analyst','Technical Program Manager','Solution Architect'),
 )
+#default='Software Engineer'
 
-@st.cache(persist=True) #memoization
-def load_data(nrows):
-    data = pd.read_csv(DATA_URL, nrows=nrows)
-    lowercase = lambda x: str(x).lower()
-    data.rename(lowercase, axis="columns", inplace=True)
-    data[DATE_TIME] = pd.to_datetime(data[DATE_TIME])
-    return data
+location_trend_role1_df = location_trend_df[location_trend_df["title"]=='Data Scientist'].groupby(by="US State").mean()
+y1 = list(location_trend_role1_df.index)
+x1 = location_trend_role1_df["totalyearlycompensation"]
+location_trend_role2_df = location_trend_df[location_trend_df["title"]==role_to_compare].groupby(by="US State").mean()
+y2 = list(location_trend_role2_df.index)
+x2 = location_trend_role2_df["totalyearlycompensation"]
 
-data = load_data(100000) #loading top 1lakh rows
+layout = go.Layout(
+    xaxis=dict(
+        title="Top 10 States in US"
+    ),
+    yaxis=dict(
+        title="Total Yearly Compensation"
+    ) )
 
-# CREATING FUNCTION FOR MAPS
+fig = go.Figure(layout=layout, data=[
+    go.Bar(name='Data Scientist', x = y1, y = x1),
+    go.Bar(name=role_to_compare, x = y2, y = x2)
+])
+# Change the bar mode
+fig.update_layout(barmode='group')
+st.plotly_chart(fig)
+st.subheader('🔎 Observation')
+st.write('Across different job roles, salaries offered in states like California, Washington, Massachusetts, and New York is on a higher end. Whereas, states like DC, Georgia, Texas, and Pennsylvania salaries are comparatively on a lower end. This directly correlates to the cost of living and expenses for these states. Dataset here does not indicate any noteworthy difference in the trends across states based on job roles in comparison with Data Science Roles. ')
 
-def map(data, lat, lon, zoom):
-    st.write(pdk.Deck(
-        map_style="mapbox://styles/mapbox/light-v9",
-        initial_view_state={
-            "latitude": lat,
-            "longitude": lon,
-            "zoom": zoom,
-            "pitch": 50,
-        },
-        layers=[
-            pdk.Layer(
-                "HexagonLayer",
-                data=data,
-                get_position=["lon", "lat"],
-                radius=100,
-                elevation_scale=4,
-                elevation_range=[0, 1000],
-                pickable=True,
-                extruded=True,
-            ),
-        ]
-    ))
+st.header('📊 Dataset Reference')
 
-# LAYING OUT THE TOP SECTION OF THE APP
-row1_1, row1_2 = st.beta_columns((2,3))
-
-with row1_1:
-    st.title("# NYC Uber Ridesharing Data")
-    hour_selected = st.slider("Select hour of pickup", 0, 23)
-
-with row1_2:
-    st.write(
-    """
-    ##
-    Examining how Uber pickups vary over time in New York City's and at its major regional airports.
-    By sliding the slider on the left you can view different slices of time and explore different transportation trends.
-    """)
-
-# FILTERING DATA BY HOUR SELECTED
-data = data[data[DATE_TIME].dt.hour == hour_selected]
-
-# LAYING OUT THE MIDDLE SECTION OF THE APP WITH THE MAPS
-row2_1, row2_2, row2_3, row2_4 = st.beta_columns((2,1,1,1))
-
-# SETTING THE ZOOM LOCATIONS FOR THE AIRPORTS
-la_guardia= [40.7900, -73.8700]
-jfk = [40.6650, -73.7821]
-newark = [40.7090, -74.1805]
-zoom_level = 12
-midpoint = (np.average(data["lat"]), np.average(data["lon"]))
-
-with row2_1:
-    st.write("**All New York City from %i:00 and %i:00**" % (hour_selected, (hour_selected + 1) % 24))
-    map(data, midpoint[0], midpoint[1], 11)
-
-with row2_2:
-    st.write("**La Guardia Airport**")
-    map(data, la_guardia[0],la_guardia[1], zoom_level)
-
-with row2_3:
-    st.write("**JFK Airport**")
-    map(data, jfk[0],jfk[1], zoom_level)
-
-with row2_4:
-    st.write("**Newark Airport**")
-    map(data, newark[0],newark[1], zoom_level)
-
-# FILTERING DATA FOR THE HISTOGRAM
-filtered = data[
-    (data[DATE_TIME].dt.hour >= hour_selected) & (data[DATE_TIME].dt.hour < (hour_selected + 1))
-    ]
-
-hist = np.histogram(filtered[DATE_TIME].dt.minute, bins=60, range=(0, 60))[0]
-
-chart_data = pd.DataFrame({"minute": range(60), "pickups": hist})
-
-# LAYING OUT THE HISTOGRAM SECTION
-
-st.write("")
-
-st.write("**Breakdown of rides per minute between %i:00 and %i:00**" % (hour_selected, (hour_selected + 1) % 24))
-
-st.altair_chart(alt.Chart(chart_data)
-    .mark_area(
-        interpolate='step-after',
-    ).encode(
-        x=alt.X("minute:Q", scale=alt.Scale(nice=False)),
-        y=alt.Y("pickups:Q"),
-        tooltip=['minute', 'pickups']
-    ).configure_mark(
-        opacity=0.2,
-        color='red'
-    ), use_container_width=True)
+st.write('This dataset has been collected from Kaggle - [Link](https://www.kaggle.com/jackogozaly/data-science-and-stem-salaries). It contains 62,000 salary records of STEM salaries from top companies. This data was scraped off levels.fyi and records range from the Year 2017 to 2021. While the dataset contains salaries from countries other than the US, the currency used for salary remains unspecified and the records count for these countries is limited. Hence, the scope of the location analysis in this project is limited to the states within the US alone. ')
+# Will only run once if already cached
+if st.checkbox('Click to view the raw data'):
+    st.write(df1)
