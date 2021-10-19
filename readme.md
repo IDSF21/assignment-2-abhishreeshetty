@@ -8,6 +8,8 @@
 ## Dataset
 The dataset used for this project is from Kaggle - [Source Link](https://www.kaggle.com/jackogozaly/data-science-and-stem-salaries). It contains 62,000 salary records of STEM salaries from top companies. This data was scraped off levels.fyi and records range from the Year 2017 to 2021.
 
+## Website link
+[Link](https://share.streamlit.io/idsf21/assignment-2-abhishreeshetty/main)
 
 ## Questions addressed in this project
 ### Question 1: Is there a prominent wage gap between genders in STEM Jobs? Does this trend vary for different job titles?
