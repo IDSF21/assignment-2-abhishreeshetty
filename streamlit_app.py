@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-#import plotly.graph_objects as go
+import plotly.graph_objects as go
 
 st.title('Analyzing salaries of STEM jobs')
 
@@ -53,22 +53,22 @@ location_trend_role2_df = location_trend_df[location_trend_df["title"]==role_to_
 y2 = list(location_trend_role2_df.index)
 x2 = location_trend_role2_df["totalyearlycompensation"]
 
-#layout = go.Layout(
-#    xaxis=dict(
-#        title="Top 10 States in US"
-#    ),
-#    yaxis=dict(
-#        title="Total Yearly Compensation"
-#    ) )
-#
-#fig = go.Figure(layout=layout, data=[
-#    go.Bar(name='Data Scientist', x = y1, y = x1),
-#    go.Bar(name=role_to_compare, x = y2, y = x2)
-#])
+layout = go.Layout(
+    xaxis=dict(
+        title="Top 10 States in US"
+    ),
+    yaxis=dict(
+        title="Total Yearly Compensation"
+    ) )
+
+fig = go.Figure(layout=layout, data=[
+    go.Bar(name='Data Scientist', x = y1, y = x1),
+    go.Bar(name=role_to_compare, x = y2, y = x2)
+])
 # Change the bar mode
-#fig.update_layout(barmode='group')
-#st.plotly_chart(fig)
-#st.subheader('🔎 Observation')
+fig.update_layout(barmode='group')
+st.plotly_chart(fig)
+st.subheader('🔎 Observation')
 st.write('Across different job roles, salaries offered in states like California, Washington, Massachusetts, and New York is on a higher end. Whereas, states like DC, Georgia, Texas, and Pennsylvania salaries are comparatively on a lower end. This directly correlates to the cost of living and expenses for these states. Dataset here does not indicate any noteworthy difference in the trends across states based on job roles in comparison with Data Science Roles. ')
 
 st.header('📊 Dataset Reference')
